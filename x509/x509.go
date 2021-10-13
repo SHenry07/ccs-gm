@@ -24,8 +24,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/Hyperledger-TWGC/ccs-gm/sm2"
-	"github.com/Hyperledger-TWGC/ccs-gm/sm3"
 	"hash"
 	"io"
 	"math/big"
@@ -33,6 +31,9 @@ import (
 	"reflect"
 	"strconv"
 	"time"
+
+	"github.com/Hyperledger-TWGC/ccs-gm/sm2"
+	"github.com/Hyperledger-TWGC/ccs-gm/sm3"
 )
 
 // pkixPublicKey reflects a PKIX public key structure. See SubjectPublicKeyInfo
@@ -116,7 +117,6 @@ func marshalPublicKey(pub interface{}) (publicKeyBytes []byte, publicKeyAlgorith
 	}
 
 	return publicKeyBytes, publicKeyAlgorithm, nil
-
 }
 
 // MarshalPKIXPublicKey serialises a public key to DER-encoded PKIX format.
@@ -210,6 +210,7 @@ const (
 	SHA256WithRSAPSS
 	SHA384WithRSAPSS
 	SHA512WithRSAPSS
+	PureEd25519
 	SM2WithSM3
 	SM2WithSHA1
 	SM2WithSHA256
@@ -257,10 +258,25 @@ type PublicKeyAlgorithm int
 const (
 	UnknownPublicKeyAlgorithm PublicKeyAlgorithm = iota
 	RSA
-	DSA
+	DSA // Unsupported
 	ECDSA
+	Ed25519
 	SM2
 )
+
+var publicKeyAlgoName = [...]string{
+	RSA:     "RSA",
+	DSA:     "DSA",
+	ECDSA:   "ECDSA",
+	Ed25519: "Ed25519",
+}
+
+func (algo PublicKeyAlgorithm) String() string {
+	if 0 < algo && int(algo) < len(publicKeyAlgoName) {
+		return publicKeyAlgoName[algo]
+	}
+	return strconv.Itoa(int(algo))
+}
 
 // OIDs for signature algorithms
 //
@@ -326,6 +342,7 @@ var (
 	oidSignatureECDSAWithSHA256 = asn1.ObjectIdentifier{1, 2, 840, 10045, 4, 3, 2}
 	oidSignatureECDSAWithSHA384 = asn1.ObjectIdentifier{1, 2, 840, 10045, 4, 3, 3}
 	oidSignatureECDSAWithSHA512 = asn1.ObjectIdentifier{1, 2, 840, 10045, 4, 3, 4}
+	oidSignatureEd25519         = asn1.ObjectIdentifier{1, 3, 101, 112}
 
 	oidSHA256 = asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 1}
 	oidSHA384 = asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 2}
@@ -338,7 +355,7 @@ var (
 	// to produce certificates with this OID.
 	oidISOSignatureSHA1WithRSA = asn1.ObjectIdentifier{1, 3, 14, 3, 2, 29}
 
-	//oid gm
+	// oid gm
 	oidSignatureSM2WithSM3    = asn1.ObjectIdentifier{1, 2, 156, 10197, 1, 501}
 	oidSignatureSM2WithSHA1   = asn1.ObjectIdentifier{1, 2, 156, 10197, 1, 502}
 	oidSignatureSM2WithSHA256 = asn1.ObjectIdentifier{1, 2, 156, 10197, 1, 503}
@@ -346,29 +363,31 @@ var (
 
 var signatureAlgorithmDetails = []struct {
 	algo       SignatureAlgorithm
+	name       string
 	oid        asn1.ObjectIdentifier
 	pubKeyAlgo PublicKeyAlgorithm
 	hash       crypto.Hash
 }{
-	{MD2WithRSA, oidSignatureMD2WithRSA, RSA, crypto.Hash(0) /* no value for MD2 */},
-	{MD5WithRSA, oidSignatureMD5WithRSA, RSA, crypto.MD5},
-	{SHA1WithRSA, oidSignatureSHA1WithRSA, RSA, crypto.SHA1},
-	{SHA1WithRSA, oidISOSignatureSHA1WithRSA, RSA, crypto.SHA1},
-	{SHA256WithRSA, oidSignatureSHA256WithRSA, RSA, crypto.SHA256},
-	{SHA384WithRSA, oidSignatureSHA384WithRSA, RSA, crypto.SHA384},
-	{SHA512WithRSA, oidSignatureSHA512WithRSA, RSA, crypto.SHA512},
-	{SHA256WithRSAPSS, oidSignatureRSAPSS, RSA, crypto.SHA256},
-	{SHA384WithRSAPSS, oidSignatureRSAPSS, RSA, crypto.SHA384},
-	{SHA512WithRSAPSS, oidSignatureRSAPSS, RSA, crypto.SHA512},
-	{DSAWithSHA1, oidSignatureDSAWithSHA1, DSA, crypto.SHA1},
-	{DSAWithSHA256, oidSignatureDSAWithSHA256, DSA, crypto.SHA256},
-	{ECDSAWithSHA1, oidSignatureECDSAWithSHA1, ECDSA, crypto.SHA1},
-	{ECDSAWithSHA256, oidSignatureECDSAWithSHA256, ECDSA, crypto.SHA256},
-	{ECDSAWithSHA384, oidSignatureECDSAWithSHA384, ECDSA, crypto.SHA384},
-	{ECDSAWithSHA512, oidSignatureECDSAWithSHA512, ECDSA, crypto.SHA512},
-	{SM2WithSM3, oidSignatureSM2WithSM3, SM2, 255},
-	{SM2WithSHA1, oidSignatureSM2WithSHA1, SM2, crypto.SHA1},
-	{SM2WithSHA256, oidSignatureSM2WithSHA256, SM2, crypto.SHA256},
+	{MD2WithRSA, "MD2-RSA", oidSignatureMD2WithRSA, RSA, crypto.Hash(0) /* no value for MD2 */},
+	{MD5WithRSA, "MD5-RSA", oidSignatureMD5WithRSA, RSA, crypto.MD5},
+	{SHA1WithRSA, "SHA1-RSA", oidSignatureSHA1WithRSA, RSA, crypto.SHA1},
+	{SHA1WithRSA, "SHA1-RSA", oidISOSignatureSHA1WithRSA, RSA, crypto.SHA1},
+	{SHA256WithRSA, "SHA256-RSA", oidSignatureSHA256WithRSA, RSA, crypto.SHA256},
+	{SHA384WithRSA, "SHA384-RSA", oidSignatureSHA384WithRSA, RSA, crypto.SHA384},
+	{SHA512WithRSA, "SHA512-RSA", oidSignatureSHA512WithRSA, RSA, crypto.SHA512},
+	{SHA256WithRSAPSS, "SHA256-RSAPSS", oidSignatureRSAPSS, RSA, crypto.SHA256},
+	{SHA384WithRSAPSS, "SHA384-RSAPSS", oidSignatureRSAPSS, RSA, crypto.SHA384},
+	{SHA512WithRSAPSS, "SHA512-RSAPSS", oidSignatureRSAPSS, RSA, crypto.SHA512},
+	{DSAWithSHA1, "DSA-SHA1", oidSignatureDSAWithSHA1, DSA, crypto.SHA1},
+	{DSAWithSHA256, "DSA-SHA256", oidSignatureDSAWithSHA256, DSA, crypto.SHA256},
+	{ECDSAWithSHA1, "ECDSA-SHA1", oidSignatureECDSAWithSHA1, ECDSA, crypto.SHA1},
+	{ECDSAWithSHA256, "ECDSA-SHA256", oidSignatureECDSAWithSHA256, ECDSA, crypto.SHA256},
+	{ECDSAWithSHA384, "ECDSA-SHA384", oidSignatureECDSAWithSHA384, ECDSA, crypto.SHA384},
+	{ECDSAWithSHA512, "ECDSA-SHA512", oidSignatureECDSAWithSHA512, ECDSA, crypto.SHA512},
+	{PureEd25519, "Ed25519", oidSignatureEd25519, Ed25519, crypto.Hash(0) /* no pre-hashing */},
+	{SM2WithSM3, "SM2-SM3", oidSignatureSM2WithSM3, SM2, 255},
+	{SM2WithSHA1, "SM2-SHA1", oidSignatureSM2WithSHA1, SM2, crypto.SHA1},
+	{SM2WithSHA256, "SM2-SHA256", oidSignatureSM2WithSHA256, SM2, crypto.SHA256},
 }
 
 // pssParameters reflects the parameters in an AlgorithmIdentifier that
@@ -493,10 +512,11 @@ func getSignatureAlgorithmFromAI(ai pkix.AlgorithmIdentifier) SignatureAlgorithm
 // id-ecPublicKey OBJECT IDENTIFIER ::= {
 //       iso(1) member-body(2) us(840) ansi-X9-62(10045) keyType(2) 1 }
 var (
-	oidPublicKeyRSA   = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 1}
-	oidPublicKeyDSA   = asn1.ObjectIdentifier{1, 2, 840, 10040, 4, 1}
-	oidPublicKeyECDSA = asn1.ObjectIdentifier{1, 2, 840, 10045, 2, 1}
-	oidPublicKeySM2   = asn1.ObjectIdentifier{1, 2, 840, 10045, 2, 1} //TODO this value is specified no where, need to confirm next
+	oidPublicKeyRSA     = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 1}
+	oidPublicKeyDSA     = asn1.ObjectIdentifier{1, 2, 840, 10040, 4, 1}
+	oidPublicKeyECDSA   = asn1.ObjectIdentifier{1, 2, 840, 10045, 2, 1}
+	oidPublicKeySM2     = asn1.ObjectIdentifier{1, 2, 840, 10045, 2, 1} // TODO this value is specified no where, need to confirm next
+	oidPublicKeyEd25519 = oidSignatureEd25519
 )
 
 func getPublicKeyAlgorithmFromOID(oid asn1.ObjectIdentifier) PublicKeyAlgorithm {
@@ -507,6 +527,8 @@ func getPublicKeyAlgorithmFromOID(oid asn1.ObjectIdentifier) PublicKeyAlgorithm 
 		return DSA
 	case oid.Equal(oidPublicKeyECDSA):
 		return ECDSA
+	case oid.Equal(oidPublicKeyEd25519):
+		return Ed25519
 	}
 	return UnknownPublicKeyAlgorithm
 }
@@ -878,7 +900,7 @@ func checkSignature(algo SignatureAlgorithm, signed, signature []byte, publicKey
 
 	switch algo {
 	case SM2WithSM3:
-		//Do nothing here, just in case not go into default
+		// Do nothing here, just in case not go into default
 	case SHA1WithRSA, DSAWithSHA1, ECDSAWithSHA1, SM2WithSHA1:
 		hashType = crypto.SHA1
 	case SHA256WithRSA, SHA256WithRSAPSS, DSAWithSHA256, ECDSAWithSHA256, SM2WithSHA256:
@@ -1771,11 +1793,11 @@ func signingParamsForPublicKey(pub interface{}, requestedSigAlgo SignatureAlgori
 		pubType = SM2
 		switch pub.Curve {
 		case sm2.P256():
-			//hashFunc = tjSM3
+			// hashFunc = tjSM3
 			hashFunc = 255
 			sigAlgo.Algorithm = oidSignatureSM2WithSM3
-			//hashFunc = crypto.SHA256
-			//sigAlgo.Algorithm = oidSignatureSM2WithSHA256
+			// hashFunc = crypto.SHA256
+			// sigAlgo.Algorithm = oidSignatureSM2WithSHA256
 		default:
 			err = errors.New("x509: SM2 unknown elliptic curve")
 		}
@@ -2398,13 +2420,13 @@ func parseCertificateRequest(in *certificateRequest) (*CertificateRequest, error
 		RawSubjectPublicKeyInfo:  in.TBSCSR.PublicKey.Raw,
 		RawSubject:               in.TBSCSR.Subject.FullBytes,
 
-		Signature:          in.SignatureValue.RightAlign(),
-		//SignatureAlgorithm: getSignatureAlgorithmFromAI(in.SignatureAlgorithm),
+		Signature: in.SignatureValue.RightAlign(),
+		// SignatureAlgorithm: getSignatureAlgorithmFromAI(in.SignatureAlgorithm),
 		SignatureAlgorithm: SignatureAlgorithm,
-		//PublicKeyAlgorithm: getPublicKeyAlgorithmFromOID(in.TBSCSR.PublicKey.Algorithm.Algorithm),
+		// PublicKeyAlgorithm: getPublicKeyAlgorithmFromOID(in.TBSCSR.PublicKey.Algorithm.Algorithm),
 		PublicKeyAlgorithm: PublicKeyAlgorithm,
-		Version:    in.TBSCSR.Version,
-		Attributes: parseRawAttributes(in.TBSCSR.RawAttributes),
+		Version:            in.TBSCSR.Version,
+		Attributes:         parseRawAttributes(in.TBSCSR.RawAttributes),
 	}
 
 	var err error
