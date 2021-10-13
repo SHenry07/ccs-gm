@@ -12,7 +12,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Hyperledger-TWGC/ccs-gm/sm2"
+	"github.com/SHenry07/ccs-gm/sm2"
 )
 
 // pickSignatureAlgorithm selects a signature algorithm that is compatible with

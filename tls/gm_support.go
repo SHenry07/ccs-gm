@@ -11,13 +11,14 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/Hyperledger-TWGC/ccs-gm/sm2"
-	"github.com/Hyperledger-TWGC/ccs-gm/sm3"
-	"github.com/Hyperledger-TWGC/ccs-gm/sm4"
-	"github.com/Hyperledger-TWGC/ccs-gm/x509"
 	"io/ioutil"
 	"strings"
 	"sync"
+
+	"github.com/SHenry07/ccs-gm/sm2"
+	"github.com/SHenry07/ccs-gm/sm3"
+	"github.com/SHenry07/ccs-gm/sm4"
+	"github.com/SHenry07/ccs-gm/x509"
 )
 
 const VersionGMSSL = 0x0101 // GM/T 0024-2014
@@ -101,7 +102,7 @@ func getCAs() []*x509.Certificate {
 // A list of cipher suite IDs that are, or have been, implemented by this
 // package.
 const (
-	//GM crypto suites ID  Taken from GM/T 0024-2014
+	// GM crypto suites ID  Taken from GM/T 0024-2014
 	GMTLS_ECDHE_SM2_WITH_SM1_SM3 uint16 = 0xe001
 	GMTLS_SM2_WITH_SM1_SM3       uint16 = 0xe003
 	GMTLS_IBSDH_WITH_SM1_SM3     uint16 = 0xe005
@@ -142,7 +143,7 @@ func macSM3(version uint16, key []byte) macFunction {
 	return tls10MAC{hmac.New(newConstantTimeHash(sm3.New), key)}
 }
 
-//used for adapt the demand of finishHash write
+// used for adapt the demand of finishHash write
 type nilMD5Hash struct{}
 
 func (nilMD5Hash) Write(p []byte) (n int, err error) {
@@ -166,7 +167,6 @@ func (nilMD5Hash) BlockSize() int {
 
 func newFinishedHashGM(cipherSuite *cipherSuite) finishedHash {
 	return finishedHash{sm3.New(), sm3.New(), new(nilMD5Hash), new(nilMD5Hash), []byte{}, VersionGMSSL, prf12(sm3.New)}
-
 }
 
 func ecdheGMKA(version uint16) keyAgreement {
@@ -197,8 +197,7 @@ func mutualCipherSuiteGM(have []uint16, want uint16) *cipherSuite {
 	return nil
 }
 
-type GMSupport struct {
-}
+type GMSupport struct{}
 
 func (support *GMSupport) GetVersion() uint16 {
 	return VersionGMSSL
@@ -275,7 +274,6 @@ func LoadGMX509KeyPair(certFile, keyFile string) (Certificate, error) {
 //}
 
 func getCert(certPEMBlock []byte) ([][]byte, error) {
-
 	var certs [][]byte
 	var skippedBlockTypes []string
 	for {
@@ -392,7 +390,7 @@ func GMX509KeyPairs(certPEMBlock, keyPEMBlock, encCertPEMBlock, encKeyPEMBlock [
 	return certificate, nil
 }
 
-//one cert for enc and sign
+// one cert for enc and sign
 func GMX509KeyPairsSingle(certPEMBlock, keyPEMBlock []byte) (Certificate, error) {
 	fail := func(err error) (Certificate, error) { return Certificate{}, err }
 
@@ -410,12 +408,12 @@ func GMX509KeyPairsSingle(certPEMBlock, keyPEMBlock []byte) (Certificate, error)
 		return certificate, errors.New("tls: failed to parse certificate")
 	}
 
-	//if cert is not for GM, use default X509KeyPair
+	// if cert is not for GM, use default X509KeyPair
 	if checkCert.PublicKeyAlgorithm != x509.SM2 {
 		return X509KeyPair(certPEMBlock, keyPEMBlock)
 	}
 
-	certificate.Certificate = append(certificate.Certificate, certs[0]) //this is for sign and env
+	certificate.Certificate = append(certificate.Certificate, certs[0]) // this is for sign and env
 
 	keyDERBlock, err := getKey(keyPEMBlock)
 	if err != nil {

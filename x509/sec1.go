@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/Hyperledger-TWGC/ccs-gm/sm2"
+	"github.com/SHenry07/ccs-gm/sm2"
 )
 
 const ecPrivKeyVersion = 1

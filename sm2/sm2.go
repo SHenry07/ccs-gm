@@ -11,13 +11,13 @@ import (
 	"io"
 	"math/big"
 
-	"github.com/Hyperledger-TWGC/ccs-gm/sm3"
+	"github.com/SHenry07/ccs-gm/sm3"
 )
 
 type PublicKey struct {
 	elliptic.Curve
 	X, Y        *big.Int
-	PreComputed *[37][64 * 8]uint64 //precomputation
+	PreComputed *[37][64 * 8]uint64 // precomputation
 }
 
 type PrivateKey struct {
@@ -28,7 +28,7 @@ type PrivateKey struct {
 
 var generateRandK = _generateRandK
 
-//optMethod includes some optimized methods.
+// optMethod includes some optimized methods.
 type optMethod interface {
 	// CombinedMult implements fast multiplication S1*g + S2*p (g - generator, p - arbitrary point)
 	CombinedMult(Precomputed *[37][64 * 8]uint64, baseScalar, scalar []byte) (x, y *big.Int)
@@ -95,11 +95,11 @@ func _generateRandK(rand io.Reader, c elliptic.Curve) (k *big.Int) {
 
 func getZById(pub *PublicKey, id []byte) []byte {
 	c := P256()
-	var lena = uint16(len(id) * 8) //bit len of IDA
-	var ENTLa = []byte{byte(lena >> 8), byte(lena)}
-	var z = make([]byte, 0, 1024)
+	lena := uint16(len(id) * 8) // bit len of IDA
+	ENTLa := []byte{byte(lena >> 8), byte(lena)}
+	z := make([]byte, 0, 1024)
 
-	//判断公钥x,y坐标长度是否小于32字节，若小于则在前面补0
+	// 判断公钥x,y坐标长度是否小于32字节，若小于则在前面补0
 	xBuf := pub.X.Bytes()
 	yBuf := pub.Y.Bytes()
 
@@ -123,12 +123,12 @@ func getZById(pub *PublicKey, id []byte) []byte {
 	z = append(z, xBuf...)
 	z = append(z, yBuf...)
 
-	//h := sm3.New()
+	// h := sm3.New()
 	hash := sm3.SumSM3(z)
 	return hash
 }
 
-//Za = sm3(ENTL||IDa||a||b||Gx||Gy||Xa||Xy)
+// Za = sm3(ENTL||IDa||a||b||Gx||Gy||Xa||Xy)
 func getZ(pub *PublicKey) []byte {
 	return getZById(pub, []byte("1234567812345678"))
 }
@@ -139,7 +139,7 @@ func Sign(rand io.Reader, priv *PrivateKey, msg []byte) (r, s *big.Int, err erro
 	//	return
 	//}
 
-	var m = make([]byte, 32+len(msg))
+	m := make([]byte, 32+len(msg))
 	copy(m, getZ(&priv.PublicKey))
 	copy(m[32:], msg)
 
@@ -220,18 +220,18 @@ func Verify(pub *PublicKey, msg []byte, r, s *big.Int) bool {
 
 	n := c.Params().N
 
-	var m = make([]byte, 32+len(msg))
+	m := make([]byte, 32+len(msg))
 	copy(m, getZ(pub))
 	copy(m[32:], msg)
-	//h := sm3.New()
-	//hash := h.Sum(m)
+	// h := sm3.New()
+	// hash := h.Sum(m)
 	hash := sm3.SumSM3(m)
 	e := new(big.Int).SetBytes(hash[:])
 
 	t := new(big.Int).Add(r, s)
 
 	// Check if implements S1*g + S2*p
-	//Using fast multiplication CombinedMult.
+	// Using fast multiplication CombinedMult.
 	var x1 *big.Int
 	if opt, ok := c.(optMethod); ok && (pub.PreComputed != nil) {
 		x1, _ = opt.CombinedMult(pub.PreComputed, s.Bytes(), t.Bytes())
@@ -264,7 +264,7 @@ func VerifyWithDigest(pub *PublicKey, digest []byte, r, s *big.Int) bool {
 
 	t := new(big.Int).Add(r, s)
 	// Check if implements S1*g + S2*p
-	//Using fast multiplication CombinedMult.
+	// Using fast multiplication CombinedMult.
 	var x1 *big.Int
 	if opt, ok := c.(optMethod); ok && (pub.PreComputed != nil) {
 		x1, _ = opt.CombinedMult(pub.PreComputed, s.Bytes(), t.Bytes())

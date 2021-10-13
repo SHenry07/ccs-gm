@@ -14,7 +14,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Hyperledger-TWGC/ccs-gm/sm2"
+	"github.com/SHenry07/ccs-gm/sm2"
 )
 
 // pkcs8 reflects an ASN.1, PKCS #8 PrivateKey. See

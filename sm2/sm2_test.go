@@ -12,7 +12,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/Hyperledger-TWGC/ccs-gm/sm3"
+	"github.com/SHenry07/ccs-gm/sm3"
 )
 
 func TestKeyGen(t *testing.T) {
@@ -33,13 +33,12 @@ func TestSignAndVer(t *testing.T) {
 		panic("GenerateKey failed")
 	}
 
-	//hfunc := sm3.New()
-	//hfunc.Write(msg)
-	//hash := hfunc.Sum(nil)
+	// hfunc := sm3.New()
+	// hfunc.Write(msg)
+	// hash := hfunc.Sum(nil)
 	hash := sm3.SumSM3(msg)
 
 	r, s, err := Sign(rand.Reader, priv, hash[:])
-
 	if err != nil {
 		panic(err)
 	}
@@ -56,7 +55,7 @@ func TestSignAndVerWithDigest(t *testing.T) {
 		t.Fatalf("GenerateKey failed:%s", err)
 	}
 
-	var m = make([]byte, 32+len(msg))
+	m := make([]byte, 32+len(msg))
 	copy(m, getZ(&priv.PublicKey))
 	copy(m[32:], msg)
 	digest := sm3.SumSM3(m)
@@ -189,19 +188,20 @@ func BenchmarkVerifyWithASN1(b *testing.B) {
 		(&priv.PublicKey).Verify(msg, sig)
 	}
 }
+
 func TestEncAndDec(t *testing.T) {
 	msg := []byte("sm2 encryption standard")
 
 	sk, _ := GenerateKey(rand.Reader)
 	pk := sk.PublicKey
 
-	//test encryption
+	// test encryption
 	cipher, err := Encrypt(rand.Reader, &pk, msg)
 	if err != nil {
 		t.Fatalf("enc err:%s", err)
 	}
 
-	//test decryption
+	// test decryption
 	plain, err := Decrypt(cipher, sk)
 	if err != nil {
 		t.Fatalf("dec err:%s", err)

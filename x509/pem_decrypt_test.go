@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/base64"
-	"github.com/Hyperledger-TWGC/ccs-gm/sm2"
 	"testing"
+
+	"github.com/SHenry07/ccs-gm/sm2"
 )
 
 func TestEncAndDecPem(t *testing.T) {
@@ -15,13 +16,13 @@ func TestEncAndDecPem(t *testing.T) {
 		return
 	}
 	plainDer := base64.StdEncoding.EncodeToString(sm2Priv.D.Bytes())
-	//encrypt pem block
+	// encrypt pem block
 	block, err := EncryptPEMBlock(rand.Reader, "ENCRYPTED PRIVATE KEY", []byte(plainDer), []byte("asdf"), PEMCipherAES256)
 	if err != nil {
 		t.Errorf("encrypt pem block err: %s", err)
 		return
 	}
-	//decrypt
+	// decrypt
 	privKey, err := DecryptPEMBlock(block, []byte("asdf"))
 	if err != nil {
 		t.Errorf("decrypt pem block err: %s", err)

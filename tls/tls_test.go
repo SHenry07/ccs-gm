@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Hyperledger-TWGC/ccs-gm/x509"
 	"io"
 	"io/ioutil"
 	"math"
@@ -19,6 +18,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/SHenry07/ccs-gm/x509"
 )
 
 var rsaCertPEM = `-----BEGIN CERTIFICATE-----
@@ -331,7 +332,6 @@ func TestTLSUniqueMatches(t *testing.T) {
 }
 
 func TestVerifyHostname(t *testing.T) {
-
 	c, err := Dial("tcp", "www.baidu.com:https", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -356,7 +356,6 @@ func TestVerifyHostname(t *testing.T) {
 }
 
 func TestVerifyHostnameResumed(t *testing.T) {
-
 	config := &Config{
 		ClientSessionCache: NewLRUClientSessionCache(32),
 	}
@@ -433,7 +432,7 @@ func TestConnCloseBreakingWrite(t *testing.T) {
 	}
 
 	inWrite := make(chan bool, 1)
-	var errConnClosed = errors.New("conn closed for test")
+	errConnClosed := errors.New("conn closed for test")
 	conn.writeFunc = func(p []byte) (n int, err error) {
 		inWrite <- true
 		<-connClosed

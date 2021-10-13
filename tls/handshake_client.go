@@ -12,12 +12,13 @@ import (
 	"crypto/subtle"
 	"errors"
 	"fmt"
-	"github.com/Hyperledger-TWGC/ccs-gm/x509"
 	"io"
 	"net"
 	"strconv"
 	"strings"
 	"sync/atomic"
+
+	"github.com/SHenry07/ccs-gm/x509"
 )
 
 type clientHandshakeState struct {

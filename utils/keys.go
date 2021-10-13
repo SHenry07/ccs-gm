@@ -8,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Hyperledger-TWGC/ccs-gm/sm2"
-	"github.com/Hyperledger-TWGC/ccs-gm/x509"
+	"github.com/SHenry07/ccs-gm/sm2"
+	"github.com/SHenry07/ccs-gm/x509"
 )
 
 var (
@@ -57,7 +57,6 @@ func PrivateKeyToPEM(privateKey *sm2.PrivateKey, pwd []byte) ([]byte, error) {
 		NamedCurveOID: oidNamedCurveSm2,
 		PublicKey:     asn1.BitString{Bytes: elliptic.Marshal(privateKey.Curve, privateKey.X, privateKey.Y)},
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("error marshaling SM2 key to asn1 [%s]", err)
 	}
@@ -137,7 +136,7 @@ func PEMtoPrivateKey(raw []byte, pwd []byte) (*sm2.PrivateKey, error) {
 		return nil, fmt.Errorf("failed decoding PEM. Block must be different from nil. [% x]", raw)
 	}
 
-	if x509.IsEncryptedPEMBlock(block) || block.Type == "ENCRYPTED PRIVATE KEY"{
+	if x509.IsEncryptedPEMBlock(block) || block.Type == "ENCRYPTED PRIVATE KEY" {
 		if len(pwd) == 0 {
 			return nil, errors.New("encrypted Key. Need a password")
 		}
@@ -191,7 +190,6 @@ func PublicKeyToPEM(publicKey *sm2.PublicKey, pwd []byte) ([]byte, error) {
 			Bytes: PubASN1,
 		},
 	), nil
-
 }
 
 // PublicKeyToEncryptedPEM converts a public key to encrypted pem

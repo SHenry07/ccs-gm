@@ -32,8 +32,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Hyperledger-TWGC/ccs-gm/sm2"
-	"github.com/Hyperledger-TWGC/ccs-gm/sm3"
+	"github.com/SHenry07/ccs-gm/sm2"
+	"github.com/SHenry07/ccs-gm/sm3"
 )
 
 // pkixPublicKey reflects a PKIX public key structure. See SubjectPublicKeyInfo

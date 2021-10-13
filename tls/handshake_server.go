@@ -11,9 +11,10 @@ import (
 	"crypto/subtle"
 	"errors"
 	"fmt"
-	"github.com/Hyperledger-TWGC/ccs-gm/x509"
 	"io"
 	"sync/atomic"
+
+	"github.com/SHenry07/ccs-gm/x509"
 )
 
 // serverHandshakeState contains details of a server handshake in progress.
@@ -293,7 +294,7 @@ func (hs *serverHandshakeState) checkForResumption() bool {
 	}
 
 	var ok bool
-	var sessionTicket = append([]uint8{}, hs.clientHello.sessionTicket...)
+	sessionTicket := append([]uint8{}, hs.clientHello.sessionTicket...)
 	if hs.sessionState, ok = c.decryptTicket(sessionTicket); !ok {
 		return false
 	}

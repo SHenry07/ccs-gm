@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Hyperledger-TWGC/ccs-gm/x509"
+	"github.com/SHenry07/ccs-gm/x509"
 )
 
 func TestServer(t *testing.T) {
@@ -16,7 +16,7 @@ func TestServer(t *testing.T) {
 }
 
 func TestParsePKCS8(t *testing.T) {
-	var pemkey = `-----BEGIN EC PRIVATE KEY-----
+	pemkey := `-----BEGIN EC PRIVATE KEY-----
 MHcCAQEEIFqMuzV7443wbxPvJddt4SsM0R5tPVKlYO6KJxZsUkW4oAoGCCqBHM9V
 AYItoUQDQgAEHe77T5o6nfpiXgDcAdJp0ypCMWQWtig8yZWSRX3lFGcf+/Tgm646
 XwhaYpM3rcEtTr8hFkIQQpztF70xXNdhIA==

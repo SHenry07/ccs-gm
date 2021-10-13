@@ -11,15 +11,18 @@ import (
 	"crypto/rsa"
 	"crypto/sha1"
 	"errors"
-	"github.com/Hyperledger-TWGC/ccs-gm/x509"
 	"io"
 	"math/big"
+
+	"github.com/SHenry07/ccs-gm/x509"
 
 	"golang.org/x/crypto/curve25519"
 )
 
-var errClientKeyExchange = errors.New("tls: invalid ClientKeyExchange message")
-var errServerKeyExchange = errors.New("tls: invalid ServerKeyExchange message")
+var (
+	errClientKeyExchange = errors.New("tls: invalid ClientKeyExchange message")
+	errServerKeyExchange = errors.New("tls: invalid ServerKeyExchange message")
+)
 
 // rsaKeyAgreement implements the standard TLS key agreement where the client
 // encrypts the pre-master secret to the server's public key.
@@ -137,7 +140,6 @@ func curveForCurveID(id CurveID) (elliptic.Curve, bool) {
 	default:
 		return nil, false
 	}
-
 }
 
 // ecdheKeyAgreement implements a TLS key agreement where the server

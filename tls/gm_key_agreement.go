@@ -10,10 +10,11 @@ import (
 	"crypto/elliptic"
 	"encoding/asn1"
 	"errors"
-	"github.com/Hyperledger-TWGC/ccs-gm/sm2"
-	"github.com/Hyperledger-TWGC/ccs-gm/x509"
 	"io"
 	"math/big"
+
+	"github.com/SHenry07/ccs-gm/sm2"
+	"github.com/SHenry07/ccs-gm/x509"
 
 	"golang.org/x/crypto/curve25519"
 )
@@ -221,7 +222,7 @@ func (ka *ecdheKeyAgreementGM) processServerKeyExchange(config *Config, clientHe
 		return errServerKeyExchange
 	}
 
-	//according to GMT0024, we don't care about
+	// according to GMT0024, we don't care about
 	curve := sm2.P256()
 	ka.x, ka.y = elliptic.Unmarshal(curve, publicKey) // Unmarshal also checks whether the given point is on the curve
 	if ka.x == nil {
@@ -303,14 +304,14 @@ type eccKeyAgreementGM struct {
 	// NIST curves is being used.
 	x, y *big.Int
 
-	//cert for encipher referred to GMT0024
+	// cert for encipher referred to GMT0024
 	encipherCert *x509.Certificate
 }
 
 func (ka *eccKeyAgreementGM) generateServerKeyExchange(config *Config, signCert, cipherCert *Certificate,
 	clientHello *clientHelloMsg, hello *serverHelloMsg) (*serverKeyExchangeMsg, error) {
 	// mod by syl only one cert
-	//digest := ka.hashForServerKeyExchange(clientHello.random, hello.random, cert.Certificate[1])
+	// digest := ka.hashForServerKeyExchange(clientHello.random, hello.random, cert.Certificate[1])
 	digest := ka.hashForServerKeyExchange(clientHello.random, hello.random, cipherCert.Certificate[0])
 
 	priv, ok := signCert.PrivateKey.(crypto.Signer)
@@ -349,7 +350,7 @@ func (ka *eccKeyAgreementGM) processClientKeyExchange(config *Config, cert *Cert
 	if !ok {
 		return nil, errors.New("tls: certificate private key does not implement crypto.Decrypter")
 	}
-	//plain, err := cert.EncipherPrivateKey.Decrypt(config.rand(), cipher, nil)
+	// plain, err := cert.EncipherPrivateKey.Decrypt(config.rand(), cipher, nil)
 	plain, err := priv.Decrypt(config.rand(), cipher, nil)
 	if err != nil {
 		return nil, err
@@ -358,7 +359,7 @@ func (ka *eccKeyAgreementGM) processClientKeyExchange(config *Config, cert *Cert
 		return nil, errClientKeyExchange
 	}
 
-	//we do not examine the version here according to openssl practice
+	// we do not examine the version here according to openssl practice
 	return plain, nil
 }
 
@@ -371,11 +372,11 @@ func (ka *eccKeyAgreementGM) processServerKeyExchange(config *Config, clientHell
 		return errServerKeyExchange
 	}
 	sig := skx.key[2:]
-	//sig := skx.key[:]
+	// sig := skx.key[:]
 
 	digest := ka.hashForServerKeyExchange(clientHello.random, serverHello.random, ka.encipherCert.Raw)
 
-	//verify
+	// verify
 	pubKey, ok := cert.PublicKey.(*sm2.PublicKey)
 	if !ok {
 		return errors.New("tls: sm2 signing requires a sm2 public key")

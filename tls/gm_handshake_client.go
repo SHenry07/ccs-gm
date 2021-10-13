@@ -15,11 +15,12 @@ import (
 	"crypto/subtle"
 	"errors"
 	"fmt"
-	"github.com/Hyperledger-TWGC/ccs-gm/sm2"
-	"github.com/Hyperledger-TWGC/ccs-gm/x509"
 	"io"
 	"strconv"
 	"sync/atomic"
+
+	"github.com/SHenry07/ccs-gm/sm2"
+	"github.com/SHenry07/ccs-gm/x509"
 )
 
 type clientHandshakeStateGM struct {
@@ -294,7 +295,7 @@ func (hs *clientHandshakeStateGM) doFullHandshake() error {
 	keyAgreement := hs.suite.ka(c.vers)
 	if ka, ok := keyAgreement.(*eccKeyAgreementGM); ok {
 		// mod by syl only one cert
-		//ka.encipherCert = c.peerCertificates[1]
+		// ka.encipherCert = c.peerCertificates[1]
 		ka.encipherCert = c.peerCertificates[0]
 	}
 
@@ -320,7 +321,7 @@ func (hs *clientHandshakeStateGM) doFullHandshake() error {
 		certRequested = true
 		hs.finishedHash.Write(certReq.marshal())
 
-		if chainToSend, err = hs.getCertificate(certReq); err != nil{
+		if chainToSend, err = hs.getCertificate(certReq); err != nil {
 			c.sendAlert(alertInternalError)
 			return err
 		}
@@ -351,7 +352,7 @@ func (hs *clientHandshakeStateGM) doFullHandshake() error {
 	}
 
 	// mod by syl only one cert
-	//preMasterSecret, ckx, err := keyAgreement.generateClientKeyExchange(c.config, hs.hello, c.peerCertificates[1])
+	// preMasterSecret, ckx, err := keyAgreement.generateClientKeyExchange(c.config, hs.hello, c.peerCertificates[1])
 	preMasterSecret, ckx, err := keyAgreement.generateClientKeyExchange(c.config, hs.hello, c.peerCertificates[0])
 	if err != nil {
 		c.sendAlert(alertInternalError)
@@ -628,7 +629,6 @@ func (hs *clientHandshakeStateGM) getCertificate(certReq *certificateRequestMsgG
 	// Issuer is in certReq.certificateAuthorities
 findCert:
 	for i, chain := range c.config.Certificates {
-
 		for j, cert := range chain.Certificate {
 			x509Cert := chain.Leaf
 			// parse the certificate if this isn't the leaf

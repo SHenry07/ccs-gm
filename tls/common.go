@@ -11,13 +11,14 @@ import (
 	"crypto/sha512"
 	"errors"
 	"fmt"
-	"github.com/Hyperledger-TWGC/ccs-gm/x509"
 	"io"
 	"math/big"
 	"net"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/SHenry07/ccs-gm/x509"
 )
 
 const (
@@ -343,7 +344,7 @@ const (
 // modified. A Config may be reused; the tls package will also not
 // modify it.
 type Config struct {
-	//if not nil, will support GMT0024
+	// if not nil, will support GMT0024
 	GMSupport *GMSupport
 
 	// Rand provides the source of entropy for nonces and RSA blinding.

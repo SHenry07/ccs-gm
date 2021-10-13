@@ -14,11 +14,12 @@ import (
 	"crypto/subtle"
 	"errors"
 	"fmt"
-	"github.com/Hyperledger-TWGC/ccs-gm/sm2"
-	"github.com/Hyperledger-TWGC/ccs-gm/x509"
 	"io"
 	"strconv"
 	"sync/atomic"
+
+	"github.com/SHenry07/ccs-gm/sm2"
+	"github.com/SHenry07/ccs-gm/x509"
 )
 
 type clientHandshakeStateGM struct {
@@ -206,8 +207,8 @@ func (hs *clientHandshakeStateGM) doFullHandshake() error {
 				return fmt.Errorf("tls: pubkey type of cert is error, expect sm2.publicKey")
 			}
 
-			//cert[0] is for signature while cert[1] is for encipher, refer to  GMT0024
-			//check key usage
+			// cert[0] is for signature while cert[1] is for encipher, refer to  GMT0024
+			// check key usage
 			switch i {
 			case 0:
 				if cert.KeyUsage == 0 || (cert.KeyUsage&(x509.KeyUsageDigitalSignature|cert.KeyUsage&x509.KeyUsageContentCommitment)) == 0 {
@@ -313,7 +314,7 @@ func (hs *clientHandshakeStateGM) doFullHandshake() error {
 		certRequested = true
 		hs.finishedHash.Write(certReq.marshal())
 
-		if chainToSend, err = hs.getCertificate(certReq); err != nil{
+		if chainToSend, err = hs.getCertificate(certReq); err != nil {
 			c.sendAlert(alertInternalError)
 			return err
 		}
@@ -619,7 +620,6 @@ func (hs *clientHandshakeStateGM) getCertificate(certReq *certificateRequestMsgG
 	// Issuer is in certReq.certificateAuthorities
 findCert:
 	for i, chain := range c.config.Certificates {
-
 		for j, cert := range chain.Certificate {
 			x509Cert := chain.Leaf
 			// parse the certificate if this isn't the leaf
