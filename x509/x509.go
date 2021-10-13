@@ -560,7 +560,7 @@ var (
 func namedCurveFromOID(oid asn1.ObjectIdentifier) elliptic.Curve {
 	switch {
 	case oid.Equal(oidNamedCurveP256SM2):
-		return sm2.P256()
+		return sm2.P256Sm2()
 	case oid.Equal(oidNamedCurveP224):
 		return elliptic.P224()
 	case oid.Equal(oidNamedCurveP256):
@@ -575,7 +575,7 @@ func namedCurveFromOID(oid asn1.ObjectIdentifier) elliptic.Curve {
 
 func oidFromNamedCurve(curve elliptic.Curve) (asn1.ObjectIdentifier, bool) {
 	switch curve {
-	case sm2.P256():
+	case sm2.P256Sm2():
 		return oidNamedCurveP256SM2, true
 	case elliptic.P224():
 		return oidNamedCurveP224, true
@@ -1792,7 +1792,7 @@ func signingParamsForPublicKey(pub interface{}, requestedSigAlgo SignatureAlgori
 	case *sm2.PublicKey:
 		pubType = SM2
 		switch pub.Curve {
-		case sm2.P256():
+		case sm2.P256Sm2():
 			// hashFunc = tjSM3
 			hashFunc = 255
 			sigAlgo.Algorithm = oidSignatureSM2WithSM3

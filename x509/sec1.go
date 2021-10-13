@@ -97,7 +97,7 @@ func parseECPrivateKey(namedCurveOID *asn1.ObjectIdentifier, der []byte) (key in
 	}
 
 	switch curve {
-	case sm2.P256():
+	case sm2.P256Sm2():
 		priv := new(sm2.PrivateKey)
 		priv.Curve = curve
 		priv.D = k

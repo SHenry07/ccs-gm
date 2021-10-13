@@ -6,6 +6,7 @@ package x509
 
 import (
 	"bytes"
+	"crypto/ecdsa"
 	"encoding/hex"
 	"testing"
 )
@@ -32,7 +33,7 @@ func TestParseECPrivateKey(t *testing.T) {
 		if err != nil {
 			t.Fatalf("#%d: failed to decode EC private key: %s", i, err)
 		}
-		serialized, err := MarshalECPrivateKey(key)
+		serialized, err := MarshalECPrivateKey(key.(*ecdsa.PrivateKey))
 		if err != nil {
 			t.Fatalf("#%d: failed to encode EC private key: %s", i, err)
 		}
