@@ -223,14 +223,14 @@ func (ka *ecdheKeyAgreementGM) processServerKeyExchange(config *Config, clientHe
 	}
 
 	// according to GMT0024, we don't care about
-	curve := sm2.P256()
+	curve := sm2.P256Sm2()
 	ka.x, ka.y = elliptic.Unmarshal(curve, publicKey) // Unmarshal also checks whether the given point is on the curve
 	if ka.x == nil {
 		return errServerKeyExchange
 	}
 
 	var signatureAlgorithm SignatureScheme
-	_, sigType, hashFunc, err := pickSignatureAlgorithm(cert.PublicKey, []SignatureScheme{signatureAlgorithm}, clientHello.supportedSignatureAlgorithms, ka.version)
+	_, sigType, hashFunc, _ := pickSignatureAlgorithm(cert.PublicKey, []SignatureScheme{signatureAlgorithm}, clientHello.supportedSignatureAlgorithms, ka.version)
 
 	sigLen := int(sig[0])<<8 | int(sig[1])
 	if sigLen+2 != len(sig) {
@@ -418,7 +418,7 @@ func (ka *eccKeyAgreementGM) generateClientKeyExchange(config *Config, clientHel
 		return nil, nil, err
 	}
 
-	encrypted, err := sm2.Encrypt(config.rand(), ka.encipherCert.PublicKey.(*sm2.PublicKey), preMasterSecret)
+	encrypted, err := sm2.Encrypt(ka.encipherCert.PublicKey.(*sm2.PublicKey), preMasterSecret, config.rand(), -1)
 	if err != nil {
 		return nil, nil, err
 	}
